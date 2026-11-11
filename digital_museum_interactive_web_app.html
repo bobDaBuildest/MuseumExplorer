@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Museum: Explore &amp; Discover</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            museum: {
+              navy: '#0f172a',
+              deep: '#1e293b',
+              accent: '#d97706',
+              gold: '#f59e0b',
+              lightgold: '#fef3c7',
+              surface: '#ffffff',
+              muted: '#64748b'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            serif: ['Cinzel', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom scrollbars */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Pulse animation for active pin */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.4); opacity: 0; }
+      100% { transform: scale(0.95); opacity: 0; }
+    }
+    .pin-pulse {
+      animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+    
+    /* Smooth card slide up animation */
+    .sheet-transition {
+      transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+    }
+
+    /* Sound waveform bar animation */
+    @keyframes wave-bounce {
+      0%, 100% { height: 6px; }
+      50% { height: 24px; }
+    }
+    .wave-bar {
+      animation: wave-bounce 1s ease-in-out infinite;
+    }
+    .wave-bar:nth-child(2) { animation-delay: 0.2s; }
+    .wave-bar:nth-child(3) { animation-delay: 0.4s; }
+    .wave-bar:nth-child(4) { animation-delay: 0.1s; }
+    .wave-bar:nth-child(5) { animation-delay: 0.35s; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-800 antialiased min-h-screen flex items-center justify-center p-0 sm:p-4 font-sans select-none">
+
+  <!-- Mobile Viewport Frame Emulator for Interactive Presentation -->
+  <div class="relative w-full max-w-[420px] h-[100dvh] sm:h-[860px] bg-slate-50 sm:rounded-[36px] overflow-hidden shadow-2xl flex flex-col border border-slate-700/30">
+
+    <!-- Top Status Bar Simulation -->
+    <header class="bg-museum-navy text-white px-5 pt-3 pb-2 flex justify-between items-center z-20 text-xs font-semibold tracking-wider">
+      <span>09:41</span>
+      <div class="flex items-center space-x-2">
+        <span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded">HCI Prototype</span>
+        <svg class="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L12 22l7.03-4.39C20.26 16.07 21 14.12 21 12c0-4.97-4.03-9-9-9zm0 12c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/></svg>
+        <span class="w-4 h-2 bg-white rounded-sm inline-block"></span>
+      </div>
+    </header>
+
+    <!-- App Main Header -->
+    <div class="bg-museum-navy text-white px-5 pb-3 pt-1 shadow-md z-10 flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-museum-accent to-museum-gold flex items-center justify-center font-serif text-white font-bold text-sm shadow">
+          🏛️
+        </div>
+        <div>
+          <h1 class="text-xs uppercase tracking-widest text-amber-400/90 font-medium leading-none">Εθνικό Αρχαιολογικό</h1>
+          <div class="text-sm font-serif font-bold text-slate-100">Ψηφιακό Μουσείο</div>
+        </div>
+      </div>
+
+      <!-- Quick Accessibility Mode Switcher -->
+      <button id="header-a11y-btn" onclick="toggleAccessibility()" title="Λειτουργία Προσβασιμότητας (Persona Nikos)" class="flex items-center space-x-1 text-xs bg-slate-800/80 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded-full transition text-slate-200">
+        <span id="a11y-indicator" class="w-2 h-2 rounded-full bg-slate-400"></span>
+        <span class="text-[11px] font-medium" id="a11y-text">ΑμεΑ</span>
+      </button>
+    </div>
+
+    <!-- MAIN SCROLLABLE APP BODY -->
+    <main id="app-container" class="flex-1 overflow-y-auto no-scrollbar relative bg-slate-100 flex flex-col">
+      
+      <!-- ================= 1. HOME SCREEN VIEW ================= -->
+      <section id="view-home" class="view-panel p-4 space-y-4">
+        <!-- Search Bar with Live Filter -->
+        <div class="relative">
+          <input 
+            type="text" 
+            id="search-input"
+            oninput="handleSearch(this.value)"
+            placeholder="Αναζήτηση εκθεμάτων, αιθουσών (π.χ. Χαλκός, Καρυάτιδα)..." 
+            class="w-full bg-white border border-slate-200/80 rounded-2xl py-2.5 pl-10 pr-9 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-museum-gold focus:border-transparent shadow-sm placeholder:text-slate-400"
+          >
+          <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <button id="clear-search" onclick="clearSearch()" class="hidden absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 text-xs">✕</button>
+        </div>
+
+        <!-- Search Live Results Container (hidden by default) -->
+        <div id="search-results-box" class="hidden bg-white border border-slate-200 rounded-2xl p-2 shadow-lg space-y-1"></div>
+
+        <!-- Featured Tour Highlight Hero (Persona 1: Eleni 40min quick tour) -->
+        <div class="relative rounded-2xl overflow-hidden bg-gradient-to-br from-museum-navy via-slate-800 to-museum-deep p-4 text-white shadow-md border border-slate-700/50">
+          <div class="flex items-center space-x-2 mb-1.5">
+            <span class="bg-amber-500 text-slate-900 font-bold text-[10px] tracking-wide px-2 py-0.5 rounded-full uppercase">Προτεινόμενο</span>
+            <span class="text-slate-300 text-[11px]">⏱️ 40 λεπτά</span>
+            <span class="text-slate-300 text-[11px]">• 5 στάσεις</span>
+          </div>
+          <h2 class="text-base font-serif font-bold text-white leading-tight">Highlights Αρχαιότητας</h2>
+          <p class="text-xs text-slate-300 mt-1 line-clamp-2">Ιδανικό για επισκέπτες με περιορισμένο χρόνο. Περιλαμβάνει τα κορυφαία αριστουργήματα του μουσείου.</p>
+          
+          <div class="mt-3.5 flex items-center justify-between">
+            <div class="flex -space-x-1.5 overflow-hidden">
+              <span class="inline-block w-6 h-6 rounded-full ring-2 ring-slate-800 bg-amber-400 text-slate-950 text-[10px] font-bold text-center leading-6">1</span>
+              <span class="inline-block w-6 h-6 rounded-full ring-2 ring-slate-800 bg-amber-400 text-slate-950 text-[10px] font-bold text-center leading-6">2</span>
+              <span class="inline-block w-6 h-6 rounded-full ring-2 ring-slate-800 bg-amber-400 text-slate-950 text-[10px] font-bold text-center leading-6">3</span>
+              <span class="inline-block w-6 h-6 rounded-full ring-2 ring-slate-800 bg-slate-700 text-slate-200 text-[10px] font-bold text-center leading-6">+2</span>
+            </div>
+            <button onclick="startTourFlow()" class="bg-gradient-to-r from-museum-accent to-museum-gold hover:opacity-95 text-slate-950 font-bold text-xs px-3.5 py-1.5 rounded-xl flex items-center space-x-1.5 shadow-md active:scale-95 transition">
+              <span>Έναρξη Διαδρομής</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Access Action Buttons -->
+        <div class="grid grid-cols-3 gap-2.5">
+          <button onclick="switchTab('map')" class="bg-white hover:bg-slate-50 border border-slate-200/90 rounded-xl p-2.5 text-center flex flex-col items-center justify-center shadow-sm active:scale-95 transition">
+            <span class="text-xl mb-1">🗺️</span>
+            <span class="text-[11px] font-semibold text-slate-700">Χάρτης Αιθουσών</span>
+          </button>
+          <button onclick="switchTab('tour')" class="bg-white hover:bg-slate-50 border border-slate-200/90 rounded-xl p-2.5 text-center flex flex-col items-center justify-center shadow-sm active:scale-95 transition">
+            <span class="text-xl mb-1">🎧</span>
+            <span class="text-[11px] font-semibold text-slate-700">Audio Guide</span>
+          </button>
+          <button onclick="toggleAccessibility(true)" class="bg-white hover:bg-slate-50 border border-slate-200/90 rounded-xl p-2.5 text-center flex flex-col items-center justify-center shadow-sm active:scale-95 transition">
+            <span class="text-xl mb-1">♿</span>
+            <span class="text-[11px] font-semibold text-slate-700">Χωρίς Σκάλες</span>
+          </button>
+        </div>
+
+        <!-- Section: Top Exhibits Carousel -->
+        <div>
+          <div class="flex justify-between items-center mb-2 px-0.5">
+            <h3 class="font-serif font-bold text-sm text-slate-900">Κορυφαία Εκθέματα</h3>
+            <span class="text-[11px] text-museum-accent font-medium cursor-pointer hover:underline" onclick="switchTab('map')">Προβολή στον χάρτη →</span>
+          </div>
+
+          <div class="flex space-x-3 overflow-x-auto no-scrollbar pb-1 pt-0.5" id="carousel-cards">
+            <!-- Dynamically populated via JS -->
+          </div>
+        </div>
+
+        <!-- Curated Tours Info Box -->
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-sm">
+          <div class="flex items-center space-x-2 text-xs font-semibold text-slate-700 mb-2">
+            <span class="text-amber-500 font-bold">✨</span>
+            <span>Επιλογές Περιήγησης</span>
+          </div>
+          <div class="space-y-2">
+            <div class="p-2.5 rounded-xl bg-slate-50 hover:bg-amber-50/50 border border-slate-100 flex items-center justify-between cursor-pointer transition" onclick="selectTour(0)">
+              <div>
+                <div class="text-xs font-bold text-slate-800">Highlights (40')</div>
+                <div class="text-[10px] text-slate-500">Ποσειδώνας Αρτεμισίου, Μυκήνες, Κόρη</div>
+              </div>
+              <span class="text-xs text-amber-600 font-bold">Επιλογή ›</span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-50 hover:bg-amber-50/50 border border-slate-100 flex items-center justify-between cursor-pointer transition" onclick="selectTour(1)">
+              <div>
+                <div class="text-xs font-bold text-slate-800">Πλήρης Ιστορική (90')</div>
+                <div class="text-[10px] text-slate-500">Όλες οι αίθουσες Γλυπτών &amp; Αγγείων</div>
+              </div>
+              <span class="text-xs text-slate-400 font-bold">Επιλογή ›</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 2. INTERACTIVE MAP VIEW ================= -->
+      <section id="view-map" class="view-panel hidden p-4 space-y-3 flex-1 flex flex-col">
+        <!-- Floor & A11y Controls -->
+        <div class="flex items-center justify-between bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex bg-slate-100 p-0.5 rounded-xl text-xs font-semibold">
+            <button id="btn-floor-0" onclick="setFloor(0)" class="px-3 py-1.5 rounded-lg bg-white shadow-sm text-museum-navy">Ισόγειο</button>
+            <button id="btn-floor-1" onclick="setFloor(1)" class="px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800">1ος Όροφος</button>
+          </div>
+          
+          <button onclick="toggleAccessibility()" class="flex items-center space-x-1.5 text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700">
+            <span>♿</span>
+            <span id="map-a11y-label" class="text-[11px] font-medium">Όλες οι διαδρομές</span>
+          </button>
+        </div>
+
+        <!-- Interactive Map Canvas Container -->
+        <div class="relative bg-white rounded-2xl border border-slate-200 shadow-sm p-2 flex-1 flex flex-col justify-center items-center overflow-hidden min-h-[340px]">
+          
+          <!-- Map Legend Header -->
+          <div class="absolute top-2.5 left-3 flex items-center space-x-2 text-[10px] text-slate-500 bg-white/90 backdrop-blur px-2 py-1 rounded-lg border border-slate-200/80 z-10 shadow-xs">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+            <span>Στάσεις Διαδρομής</span>
+            <span class="inline-block w-2.5 h-2.5 rounded-sm bg-emerald-500 ml-1"></span>
+            <span>Ασανσέρ</span>
+          </div>
+
+          <!-- Interactive SVG Floor Plan -->
+          <svg id="museum-svg" viewBox="0 0 340 380" class="w-full h-full max-h-[360px]" xmlns="http://www.w3.org/2000/svg">
+            <!-- Background Walls -->
+            <rect x="15" y="15" width="310" height="350" rx="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2"/>
+            
+            <!-- Room 1: Entrance & Bronze Hall -->
+            <rect id="hall-1" x="25" y="25" width="135" height="100" rx="6" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5" class="transition cursor-pointer hover:fill-amber-100" onclick="focusHall(1)"/>
+            <text x="35" y="45" font-size="9" font-weight="700" fill="#475569">ΑΙΘΟΥΣΑ 1</text>
+            <text x="35" y="58" font-size="8" fill="#64748b">Χάλκινα Έργα</text>
+
+            <!-- Room 2: Mycenaean Hall -->
+            <rect id="hall-2" x="180" y="25" width="135" height="100" rx="6" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5" class="transition cursor-pointer hover:fill-amber-100" onclick="focusHall(2)"/>
+            <text x="190" y="45" font-size="9" font-weight="700" fill="#475569">ΑΙΘΟΥΣΑ 2</text>
+            <text x="190" y="58" font-size="8" fill="#64748b">Μυκηναϊκή Συλλογή</text>
+
+            <!-- Central Corridor -->
+            <rect x="135" y="135" width="70" height="110" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-dasharray="4,4" stroke-width="1"/>
+            <text x="170" y="195" font-size="7.5" fill="#94a3b8" text-anchor="middle">ΚΕΝΤΡΙΚΟΣ ΔΙΑΔΡΟΜΟΣ</text>
+
+            <!-- Room 3: Archaic & Statues -->
+            <rect id="hall-3" x="25" y="135" width="100" height="110" rx="6" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5" class="transition cursor-pointer hover:fill-amber-100" onclick="focusHall(3)"/>
+            <text x="35" y="155" font-size="9" font-weight="700" fill="#475569">ΑΙΘΟΥΣΑ 3</text>
+            <text x="35" y="168" font-size="8" fill="#64748b">Κούροι &amp; Κόρες</text>
+
+            <!-- Room 4: Classic Sculpture -->
+            <rect id="hall-4" x="215" y="135" width="100" height="110" rx="6" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5" class="transition cursor-pointer hover:fill-amber-100" onclick="focusHall(4)"/>
+            <text x="225" y="155" font-size="9" font-weight="700" fill="#475569">ΑΙΘΟΥΣΑ 4</text>
+            <text x="225" y="168" font-size="8" fill="#64748b">Κλασική Γλυπτική</text>
+
+            <!-- Room 5: Atrium & Gift Shop -->
+            <rect id="hall-5" x="25" y="255" width="290" height="95" rx="6" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5" class="transition cursor-pointer hover:fill-amber-100" onclick="focusHall(5)"/>
+            <text x="35" y="275" font-size="9" font-weight="700" fill="#475569">ΑΙΘΟΥΣΑ 5</text>
+            <text x="35" y="288" font-size="8" fill="#64748b">Αίθριο &amp; Μηχανισμός Αντικυθήρων</text>
+
+            <!-- Main Entrance & Elevator icons -->
+            <rect x="145" y="350" width="50" height="12" fill="#0f172a" rx="2"/>
+            <text x="170" y="359" font-size="7" fill="#ffffff" text-anchor="middle" font-weight="700">ΕΙΣΟΔΟΣ</text>
+
+            <!-- Elevator (Accessible) -->
+            <g id="elevator-marker" class="cursor-pointer" onclick="alertMsg('Ανελκυστήρας: Πλήρως προσβάσιμος για αναπηρικά αμαξίδια προς τον 1ο όροφο.')">
+              <rect x="182" y="138" width="18" height="18" rx="4" fill="#10b981"/>
+              <text x="191" y="151" font-size="10" fill="#ffffff" text-anchor="middle" font-weight="bold">♿</text>
+            </g>
+
+            <!-- Recommended Walk Path (Dashed dynamic guide line) -->
+            <path id="route-path" d="M 170 350 L 170 300 L 90 300 L 90 85 L 245 85 L 265 190" fill="none" stroke="#f59e0b" stroke-width="3" stroke-dasharray="6,6" stroke-linecap="round" class="transition-all duration-500 opacity-90"/>
+
+            <!-- Interactive Pin 1: Artemision Bronze (Hall 1) -->
+            <g id="pin-1" class="cursor-pointer transition-transform duration-200" onclick="selectPin(1)">
+              <circle cx="90" cy="85" r="14" fill="#f59e0b" class="pin-pulse opacity-40"/>
+              <circle cx="90" cy="85" r="11" fill="#0f172a" stroke="#f59e0b" stroke-width="2"/>
+              <text x="90" y="89" font-size="10" font-weight="bold" fill="#f59e0b" text-anchor="middle">1</text>
+            </g>
+
+            <!-- Interactive Pin 2: Mask of Agamemnon (Hall 2) -->
+            <g id="pin-2" class="cursor-pointer transition-transform duration-200" onclick="selectPin(2)">
+              <circle cx="245" cy="85" r="11" fill="#0f172a" stroke="#cbd5e1" stroke-width="2"/>
+              <text x="245" y="89" font-size="10" font-weight="bold" fill="#cbd5e1" text-anchor="middle">2</text>
+            </g>
+
+            <!-- Interactive Pin 3: Archaic Kore (Hall 3) -->
+            <g id="pin-3" class="cursor-pointer transition-transform duration-200" onclick="selectPin(3)">
+              <circle cx="75" cy="190" r="11" fill="#0f172a" stroke="#cbd5e1" stroke-width="2"/>
+              <text x="75" y="194" font-size="10" font-weight="bold" fill="#cbd5e1" text-anchor="middle">3</text>
+            </g>
+
+            <!-- Interactive Pin 4: Antikythera Mechanism (Hall 5) -->
+            <g id="pin-4" class="cursor-pointer transition-transform duration-200" onclick="selectPin(4)">
+              <circle cx="170" cy="300" r="11" fill="#0f172a" stroke="#cbd5e1" stroke-width="2"/>
+              <text x="170" y="304" font-size="10" font-weight="bold" fill="#cbd5e1" text-anchor="middle">4</text>
+            </g>
+          </svg>
+        </div>
+
+        <!-- Selected Pin Preview Mini-Card -->
+        <div id="map-preview-card" class="bg-white border border-slate-200 rounded-2xl p-3 shadow-md flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <img id="map-card-img" src="" alt="Thumbnail" class="w-12 h-12 rounded-xl object-cover border border-slate-200 bg-slate-100">
+            <div>
+              <div class="flex items-center space-x-1.5">
+                <span id="map-card-badge" class="bg-amber-100 text-amber-800 text-[9px] font-bold px-1.5 py-0.5 rounded">Στάση 1</span>
+                <span id="map-card-hall" class="text-[10px] text-slate-500">Αίθουσα 1</span>
+              </div>
+              <h4 id="map-card-title" class="text-xs font-serif font-bold text-slate-900 mt-0.5">Ποσειδώνας Αρτεμισίου</h4>
+              <p id="map-card-time" class="text-[10px] text-slate-500">Εκτιμώμενος χρόνος: 3 λεπτά</p>
+            </div>
+          </div>
+          <div class="flex flex-col space-y-1">
+            <button onclick="openModalForCurrentPin()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition">Πληροφορίες</button>
+            <button onclick="startTourAtStep(selectedPinIndex)" class="bg-museum-accent hover:bg-amber-600 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-sm transition">Πλοήγηση</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 3. ACTIVE TOUR GUIDE VIEW ================= -->
+      <section id="view-tour" class="view-panel hidden p-4 space-y-3.5 flex-1 flex flex-col justify-between">
+        
+        <!-- Live Guidance Top Ribbon -->
+        <div class="bg-museum-navy text-white rounded-2xl p-3.5 shadow-md border border-slate-700/60">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center space-x-2.5">
+              <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold text-lg">
+                <span id="tour-nav-arrow">➔</span>
+              </div>
+              <div>
+                <div class="text-[10px] tracking-wide text-amber-400 uppercase font-semibold" id="tour-step-counter">ΣΤΑΣΗ 1 ΑΠΟ 4 • ΑΠΟΜΕΝΟΥΝ 38 ΛΕΠΤΑ</div>
+                <div class="text-xs font-bold text-slate-100 mt-0.5" id="tour-turn-instruction">Προχωρήστε 15μ. ευθεία προς την Αίθουσα 1</div>
+              </div>
+            </div>
+            <button onclick="switchTab('map')" class="text-slate-400 hover:text-white p-1" title="Προβολή στον χάρτη">
+              🗺️
+            </button>
+          </div>
+          
+          <!-- Mini Progress Bar -->
+          <div class="w-full bg-slate-700/60 rounded-full h-1.5 mt-3 overflow-hidden">
+            <div id="tour-progress-bar" class="bg-amber-400 h-1.5 rounded-full transition-all duration-300" style="width: 25%"></div>
+          </div>
+        </div>
+
+        <!-- Exhibit Visual Card -->
+        <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden flex-1 flex flex-col">
+          <div class="relative w-full h-48 bg-slate-900 overflow-hidden">
+            <img id="tour-exhibit-img" src="" alt="Exhibit" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
+            <div class="absolute bottom-2.5 left-3 right-3 flex justify-between items-end">
+              <div>
+                <span id="tour-exhibit-period" class="text-[10px] bg-amber-500 text-slate-950 font-bold px-2 py-0.5 rounded-md">460 π.Χ.</span>
+                <h3 id="tour-exhibit-name" class="text-base font-serif font-bold text-white mt-1 drop-shadow-sm">Ποσειδώνας ή Ζευς Αρτεμισίου</h3>
+              </div>
+              <button onclick="toggleFavoriteFromTour()" id="tour-fav-btn" class="w-8 h-8 rounded-full bg-black/40 backdrop-blur text-white flex items-center justify-center text-sm border border-white/20">
+                ♡
+              </button>
+            </div>
+          </div>
+
+          <!-- Interactive Audio Guide Player (Simulated via Web Audio API) -->
+          <div class="p-3.5 space-y-3 flex-1 flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Ηχητικός Οδηγός</span>
+                <div class="text-xs font-semibold text-slate-700" id="tour-audio-title">Επίσημη Αφήγηση (Ελληνικά)</div>
+              </div>
+              <!-- Simulated Waveform Bars -->
+              <div id="audio-waveform" class="flex items-center space-x-1 h-6">
+                <span class="wave-bar w-1 bg-amber-500 rounded-full" style="animation-play-state: paused;"></span>
+                <span class="wave-bar w-1 bg-amber-500 rounded-full" style="animation-play-state: paused;"></span>
+                <span class="wave-bar w-1 bg-amber-500 rounded-full" style="animation-play-state: paused;"></span>
+                <span class="wave-bar w-1 bg-amber-500 rounded-full" style="animation-play-state: paused;"></span>
+                <span class="wave-bar w-1 bg-amber-500 rounded-full" style="animation-play-state: paused;"></span>
+              </div>
+            </div>
+
+            <!-- Audio Slider / Progress -->
+            <div>
+              <div class="flex justify-between text-[10px] font-mono text-slate-500 mb-1">
+                <span id="audio-current-time">00:00</span>
+                <span id="audio-total-time">02:15</span>
+              </div>
+              <div class="relative w-full h-2 bg-slate-100 rounded-full cursor-pointer overflow-hidden" onclick="seekAudio(event)">
+                <div id="audio-track-progress" class="h-full bg-gradient-to-r from-museum-accent to-museum-gold w-0 transition-all"></div>
+              </div>
+            </div>
+
+            <!-- Audio Controls Bar (Fitts' Law: Large touch targets) -->
+            <div class="flex items-center justify-between pt-1">
+              <button onclick="toggleAudioSpeed()" id="audio-speed-btn" class="text-[11px] font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg">1.0x</button>
+              
+              <div class="flex items-center space-x-3">
+                <button onclick="replayAudio10()" class="text-slate-500 hover:text-slate-800 text-xs font-bold" title="Πίσω 10s">↺ 10s</button>
+                <button onclick="toggleAudioPlay()" id="audio-play-button" class="w-12 h-12 rounded-full bg-museum-navy text-white flex items-center justify-center text-lg shadow-md hover:bg-slate-800 active:scale-95 transition">
+                  <span id="audio-play-icon">▶</span>
+                </button>
+                <button onclick="forwardAudio10()" class="text-slate-500 hover:text-slate-800 text-xs font-bold" title="Εμπρός 10s">10s ↻</button>
+              </div>
+
+              <button onclick="toggleTranscriptDrawer()" class="text-slate-500 hover:text-slate-800 p-1.5" title="Κείμενο Αφήγησης">
+                📄
+              </button>
+            </div>
+
+            <!-- Expandable Audio Transcript Text -->
+            <div id="transcript-drawer" class="hidden text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-200 mt-2 max-h-24 overflow-y-auto">
+              <p id="tour-transcript-content" class="leading-relaxed">...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Next/Prev Buttons (Thumb Zone) -->
+        <div class="flex space-x-2 pt-1">
+          <button onclick="prevTourStep()" id="tour-prev-btn" class="flex-1 py-3 px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition flex items-center justify-center space-x-1">
+            <span>← Προηγούμενο</span>
+          </button>
+          <button onclick="nextTourStep()" id="tour-next-btn" class="flex-1 py-3 px-3 rounded-xl bg-museum-accent hover:bg-amber-600 text-white text-xs font-bold shadow-md transition flex items-center justify-center space-x-1 active:scale-95">
+            <span>Επόμενο Έκθεμα →</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ================= 4. SAVED / FAVORITES VIEW ================= -->
+      <section id="view-favorites" class="view-panel hidden p-4 space-y-3 flex-1 flex flex-col">
+        <div class="flex justify-between items-center mb-1">
+          <h2 class="font-serif font-bold text-sm text-slate-900">Αποθηκευμένα Εκθέματα</h2>
+          <span id="fav-counter" class="text-xs bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">0 εκθέματα</span>
+        </div>
+        <p class="text-xs text-slate-500">Προσωπική συλλογή εκθεμάτων για ανασκόπηση μετά την επίσκεψη.</p>
+        
+        <div id="favorites-list" class="space-y-2.5 flex-1 overflow-y-auto no-scrollbar">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+    </main>
+
+    <!-- ================= MODAL BOTTOM SHEET: EXHIBIT DETAILS ================= -->
+    <div id="detail-sheet" class="absolute inset-0 bg-slate-950/60 z-30 hidden flex-col justify-end">
+      <!-- Backdrop Click to Close -->
+      <div class="flex-1" onclick="closeDetailModal()"></div>
+      
+      <!-- Sheet Content Body -->
+      <div class="bg-white rounded-t-3xl max-h-[82%] overflow-y-auto no-scrollbar p-5 space-y-4 shadow-2xl border-t border-slate-200 sheet-transition transform translate-y-full" id="sheet-inner">
+        <!-- Close Drag Handle & Button -->
+        <div class="flex justify-between items-center">
+          <div class="w-10 h-1 bg-slate-300 rounded-full mx-auto -mr-2"></div>
+          <button onclick="closeDetailModal()" class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold flex items-center justify-center">✕</button>
+        </div>
+
+        <!-- Detail Image -->
+        <div class="relative w-full h-44 rounded-2xl overflow-hidden bg-slate-900">
+          <img id="detail-img" src="" alt="Detail view" class="w-full h-full object-cover">
+          <span id="detail-period-tag" class="absolute bottom-2.5 left-2.5 bg-museum-gold text-slate-950 font-bold text-[10px] px-2 py-0.5 rounded-md"></span>
+        </div>
+
+        <!-- Detail Title & Room -->
+        <div>
+          <div class="flex items-center space-x-2 text-[11px] text-slate-500 font-medium">
+            <span id="detail-hall"></span>
+            <span>•</span>
+            <span id="detail-material"></span>
+          </div>
+          <h3 id="detail-title" class="font-serif font-bold text-lg text-slate-900 mt-0.5"></h3>
+        </div>
+
+        <!-- Structured Details (HCI: Bullet points to avoid information overload) -->
+        <div class="bg-slate-50 rounded-xl p-3 border border-slate-100 space-y-1.5 text-xs text-slate-700">
+          <div class="font-bold text-slate-800 text-[11px] uppercase tracking-wider">Σημεία Ενδιαφέροντος</div>
+          <p id="detail-bullet-1" class="text-slate-600 leading-snug">• </p>
+          <p id="detail-bullet-2" class="text-slate-600 leading-snug">• </p>
+        </div>
+
+        <!-- Full Story -->
+        <p id="detail-desc" class="text-xs text-slate-600 leading-relaxed"></p>
+
+        <!-- Actions in Sheet -->
+        <div class="flex space-x-2 pt-2">
+          <button id="detail-locate-btn" onclick="locateFromDetail()" class="flex-1 py-2.5 px-3 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-50 transition">
+            Προβολή στον Χάρτη
+          </button>
+          <button id="detail-start-btn" onclick="startTourFromDetail()" class="flex-1 py-2.5 px-3 rounded-xl bg-museum-navy text-white font-bold text-xs hover:bg-slate-800 transition">
+            Άκουσμα Audio Guide
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= FLOATING APP TOAST ================= -->
+    <div id="app-toast" class="absolute top-16 left-1/2 transform -translate-x-1/2 bg-slate-900/90 text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg border border-slate-700 transition-opacity duration-300 pointer-events-none opacity-0 z-50">
+      Ειδοποίηση
+    </div>
+
+    <!-- ================= FIXED BOTTOM NAVIGATION BAR ================= -->
+    <nav class="bg-white border-t border-slate-200/90 px-3 py-2 flex justify-around items-center z-20">
+      <button onclick="switchTab('home')" id="tab-home" class="flex flex-col items-center py-1 px-3 text-amber-600 font-semibold transition active:scale-95">
+        <span class="text-base">🏛️</span>
+        <span class="text-[10px] mt-0.5">Αρχική</span>
+      </button>
+
+      <button onclick="switchTab('map')" id="tab-map" class="flex flex-col items-center py-1 px-3 text-slate-400 hover:text-slate-700 font-medium transition active:scale-95">
+        <span class="text-base">🗺️</span>
+        <span class="text-[10px] mt-0.5">Χάρτης</span>
+      </button>
+
+      <button onclick="switchTab('tour')" id="tab-tour" class="flex flex-col items-center py-1 px-3 text-slate-400 hover:text-slate-700 font-medium transition active:scale-95">
+        <span class="text-base">🎧</span>
+        <span class="text-[10px] mt-0.5">Ξενάγηση</span>
+      </button>
+
+      <button onclick="switchTab('favorites')" id="tab-favorites" class="flex flex-col items-center py-1 px-3 text-slate-400 hover:text-slate-700 font-medium transition active:scale-95">
+        <span class="text-base">⭐</span>
+        <span class="text-[10px] mt-0.5">Αποθηκευμένα</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- JAVASCRIPT APPLICATION LOGIC -->
+  <script>
+    /* ==========================================================
+       DATA STORE: Museum Exhibits, Tours & Accessibility
+       ========================================================== */
+    const EXHIBITS = [
+      {
+        id: 1,
+        pinId: 1,
+        title: "Ποσειδώνας ή Ζευς του Αρτεμισίου",
+        shortTitle: "Ποσειδώνας Αρτεμισίου",
+        hall: "Αίθουσα 1 (Χάλκινα)",
+        hallId: 1,
+        period: "460 π.Χ.",
+        material: "Ορείχαλκος",
+        image: "https://images.unsplash.com/photo-1544967082-d9d25d867d66?auto=format&fit=crop&w=600&q=80",
+        bullet1: "Ένα από τα ελάχιστα σωζόμενα αυθεντικά μεγάλα χάλκινα αγάλματα της κλασικής αρχαιότητας.",
+        bullet2: "Βρέθηκε στον βυθό της θάλασσας στο ακρωτήριο Αρτεμίσιο της Βόρειας Εύβοιας.",
+        desc: "Το άγαλμα αποδίδει έναν θεό σε έντονη κίνηση, έτοιμο να εξαπολύσει κεραυνό (αν είναι ο Δίας) ή τρίαινα (αν είναι ο Ποσειδώνας). Αποτελεί κορυφαίο δείγμα του αυστηρού ρυθμού.",
+        instruction: "Προχωρήστε 15μ. ευθεία προς το κέντρο της Αίθουσας 1.",
+        audioDuration: 135, // seconds
+        transcript: "Βρίσκεστε μπροστά στον επιβλητικό θεό του Αρτεμισίου. Παρατηρήστε την τέλεια ανατομική ισορροπία και το βλέμμα συγκέντρωσης πριν από τη ρίψη του όπλου του."
+      },
+      {
+        id: 2,
+        pinId: 2,
+        title: "Χρυσή Προσωπίδα του «Αγαμέμνονα»",
+        shortTitle: "Προσωπίδα Αγαμέμνονα",
+        hall: "Αίθουσα 2 (Μυκηναϊκά)",
+        hallId: 2,
+        period: "1550 π.Χ.",
+        material: "Σφυρήλατος Χρυσός",
+        image: "https://images.unsplash.com/photo-1599739291060-4578e77dac5d?auto=format&fit=crop&w=600&q=80",
+        bullet1: "Ανακαλύφθηκε από τον Ερρίκο Σλήμαν στις Μυκήνες στον Ταφικό Κύκλο Α.",
+        bullet2: "Κατασκευασμένη από λεπτό φύλλο χρυσού με έντονα χαρακτηριστικά προσώπου.",
+        desc: "Αποτελεί τη διασημότερη νεκρική προσωπίδα του μυκηναϊκού κόσμου, προορισμένη να διατηρήσει αιώνια τη μορφή του ηγεμόνα στον άλλο κόσμο.",
+        instruction: "Στρίψτε δεξιά προς την Αίθουσα 2, προθήκη 4.",
+        audioDuration: 110,
+        transcript: "Η χρυσή προσωπίδα αντανακλά τη δύναμη και τον πλούτο των Μυκηνών. Αν και παλαιότερη του Τρωικού Πολέμου, το όνομα του Αγαμέμνονα παρέμεινε θρυλικό."
+      },
+      {
+        id: 3,
+        pinId: 3,
+        title: "Πεπλοφόρος Κόρη της Ακρόπολης",
+        shortTitle: "Αρχαϊκή Κόρη",
+        hall: "Αίθουσα 3 (Αρχαϊκά)",
+        hallId: 3,
+        period: "530 π.Χ.",
+        material: "Παριανό Μάρμαρο",
+        image: "https://images.unsplash.com/photo-1568213816046-0ee1c42bd559?auto=format&fit=crop&w=600&q=80",
+        bullet1: "Διατηρεί ακόμη ίχνη από τον αρχικό της πλούσιο χρωματικό διάκοσμο.",
+        bullet2: "Χαρακτηριστικό αινιγματικό «αρχαϊκό μειδίαμα» και περίτεχνη κόμμωση.",
+        desc: "Αφιέρωμα στην Αθηνά, το άγαλμα αντιπροσωπεύει τη χάρη της αρχαϊκής γλυπτικής και τη σημασία του χρώματος στην αρχαιοελληνική τέχνη.",
+        instruction: "Προχωρήστε νότια στον κεντρικό διάδρομο προς την Αίθουσα 3.",
+        audioDuration: 125,
+        transcript: "Παρατηρήστε τα ίχνη κόκκινου και γαλάζιου χρώματος στο ένδυμά της. Τα αρχαία αγάλματα δεν ήταν ποτέ λευκά, αλλά γεμάτα έντονα χρώματα."
+      },
+      {
+        id: 4,
+        pinId: 4,
+        title: "Μηχανισμός των Αντικυθήρων",
+        shortTitle: "Μηχανισμός Αντικυθήρων",
+        hall: "Αίθουσα 5 (Χαλκογραφίες)",
+        hallId: 5,
+        period: "150–100 π.Χ.",
+        material: "Χάλκινα γρανάζια",
+        image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=600&q=80",
+        bullet1: "Ο πρώτος γνωστός αναλογικός υπολογιστής στην ανθρώπινη ιστορία.",
+        bullet2: "Υπολόγιζε με ακρίβεια τις κινήσεις του Ήλιου, της Σελήνης και των Εκλείψεων.",
+        desc: "Βρέθηκε σε αρχαίο ναυάγιο κοντά στα Αντικύθηρα. Ένα τεχνολογικό θαύμα με περισσότερα από 30 οδοντωτά γρανάζια που ξεπερνούσε την εποχή του κατά χίλια χρόνια.",
+        instruction: "Κατευθυνθείτε προς την Αίθουσα 5 κοντά στο Αίθριο.",
+        audioDuration: 150,
+        transcript: "Μπροστά σας βρίσκεται το αποκορύφωμα της ελληνιστικής τεχνολογίας: ένα όργανο πρόβλεψης ουράνιων φαινομένων και των Ολυμπιακών Αγώνων."
+      }
+    ];
+
+    /* ==========================================================
+       APP STATE
+       ========================================================== */
+    let currentTab = 'home';
+    let selectedPinIndex = 0; // 0 to EXHIBITS.length - 1
+    let activeTourStep = 0;
+    let isAccessibilityActive = false;
+    let currentFloor = 0; // 0: Ground, 1: First
+    let favoritesList = [1]; // pre-saved exhibit 1 for mock data
+    
+    // Audio guide simulation variables
+    let isAudioPlaying = false;
+    let audioTimer = null;
+    let audioCurrentSeconds = 0;
+    let audioPlaybackRate = 1.0;
+    let audioContext = null;
+
+    /* ==========================================================
+       INITIALIZATION
+       ========================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      renderCarousel();
+      renderFavorites();
+      updateMapCard(0);
+      setupTourStep(0);
+    });
+
+    /* ==========================================================
+       TAB SWITCHING CONTROLLER
+       ========================================================== */
+    function switchTab(tabName) {
+      currentTab = tabName;
+      
+      // Toggle Views
+      document.querySelectorAll('.view-panel').forEach(el => el.classList.add('hidden'));
+      const activeView = document.getElementById(`view-${tabName}`);
+      if (activeView) activeView.classList.remove('hidden');
+
+      // Update Navigation styling
+      const tabs = ['home', 'map', 'tour', 'favorites'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        if (!btn) return;
+        if (t === tabName) {
+          btn.className = "flex flex-col items-center py-1 px-3 text-museum-accent font-bold transition active:scale-95";
+        } else {
+          btn.className = "flex flex-col items-center py-1 px-3 text-slate-400 hover:text-slate-700 font-medium transition active:scale-95";
+        }
+      });
+
+      // Special Tab triggers
+      if (tabName === 'tour') {
+        setupTourStep(activeTourStep);
+      }
+    }
+
+    /* ==========================================================
+       HOME: CAROUSEL & SEARCH
+       ========================================================== */
+    function renderCarousel() {
+      const container = document.getElementById('carousel-cards');
+      container.innerHTML = EXHIBITS.map((item, idx) => `
+        <div onclick="openDetailModal(${item.id})" class="min-w-[170px] max-w-[170px] bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer flex-shrink-0">
+          <div class="h-28 bg-slate-800 relative">
+            <img src="${item.image}" alt="${item.shortTitle}" class="w-full h-full object-cover">
+            <span class="absolute top-2 left-2 bg-slate-900/80 backdrop-blur text-white text-[9px] font-semibold px-2 py-0.5 rounded-full">
+              ${item.period}
+            </span>
+          </div>
+          <div class="p-2.5">
+            <div class="text-[9px] font-bold text-amber-600 uppercase tracking-wide leading-none">${item.hall}</div>
+            <h4 class="text-xs font-serif font-bold text-slate-900 mt-1 line-clamp-1">${item.shortTitle}</h4>
+            <div class="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-100 text-[10px] text-slate-500">
+              <span>⏱️ ${Math.round(item.audioDuration / 60)}' ακρόαση</span>
+              <span class="text-amber-500 font-bold">›</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function handleSearch(query) {
+      const box = document.getElementById('search-results-box');
+      const clearBtn = document.getElementById('clear-search');
+      const q = query.trim().toLowerCase();
+
+      if (!q) {
+        box.classList.add('hidden');
+        clearBtn.classList.add('hidden');
+        return;
+      }
+
+      clearBtn.classList.remove('hidden');
+      const results = EXHIBITS.filter(e => 
+        e.title.toLowerCase().includes(q) || 
+        e.hall.toLowerCase().includes(q) ||
+        e.desc.toLowerCase().includes(q)
+      );
+
+      if (results.length === 0) {
+        box.innerHTML = `<div class="p-3 text-xs text-slate-500 text-center">Δεν βρέθηκαν εκθέματα για "${query}"</div>`;
+      } else {
+        box.innerHTML = results.map(item => `
+          <div onclick="openDetailModal(${item.id})" class="p-2 hover:bg-slate-50 rounded-xl flex items-center space-x-2.5 cursor-pointer">
+            <img src="${item.image}" class="w-8 h-8 rounded-lg object-cover">
+            <div class="flex-1">
+              <div class="text-xs font-bold text-slate-800">${item.shortTitle}</div>
+              <div class="text-[10px] text-slate-500">${item.hall}</div>
+            </div>
+            <span class="text-xs text-amber-600 font-bold">Προβολή</span>
+          </div>
+        `).join('');
+      }
+      box.classList.remove('hidden');
+    }
+
+    function clearSearch() {
+      document.getElementById('search-input').value = '';
+      document.getElementById('search-results-box').classList.add('hidden');
+      document.getElementById('clear-search').classList.add('hidden');
+    }
+
+    function startTourFlow() {
+      activeTourStep = 0;
+      switchTab('tour');
+      alertMsg("Εκκίνηση Διαδρομής Highlights (40')");
+    }
+
+    function selectTour(index) {
+      activeTourStep = 0;
+      alertMsg(index === 0 ? "Επιλέχθηκε: Highlights (40')" : "Επιλέχθηκε: Πλήρης Ιστορική (90')");
+      switchTab('map');
+    }
+
+    /* ==========================================================
+       MAP & SVG INTERACTIONS
+       ========================================================== */
+    function setFloor(floor) {
+      currentFloor = floor;
+      const b0 = document.getElementById('btn-floor-0');
+      const b1 = document.getElementById('btn-floor-1');
+      if (floor === 0) {
+        b0.className = "px-3 py-1.5 rounded-lg bg-white shadow-sm text-museum-navy";
+        b1.className = "px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800";
+        alertMsg("Προβολή: Ισόγειο (Κεντρικές Αίθουσες)");
+      } else {
+        b1.className = "px-3 py-1.5 rounded-lg bg-white shadow-sm text-museum-navy";
+        b0.className = "px-3 py-1.5 rounded-lg text-slate-500 hover:text-slate-800";
+        alertMsg("Προβολή: 1ος Όροφος (Αγγεία & Μικροτεχνία)");
+      }
+    }
+
+    function toggleAccessibility(explicitVal) {
+      if (explicitVal !== undefined) {
+        isAccessibilityActive = explicitVal;
+      } else {
+        isAccessibilityActive = !isAccessibilityActive;
+      }
+
+      const indicator = document.getElementById('a11y-indicator');
+      const headerBtn = document.getElementById('header-a11y-btn');
+      const mapLabel = document.getElementById('map-a11y-label');
+      const routePath = document.getElementById('route-path');
+
+      if (isAccessibilityActive) {
+        indicator.className = "w-2 h-2 rounded-full bg-emerald-400";
+        headerBtn.className = "flex items-center space-x-1 text-xs bg-emerald-950/80 border border-emerald-500/50 px-2.5 py-1.5 rounded-full transition text-emerald-200";
+        mapLabel.innerText = "Χωρίς Σκάλες (Ενεργό)";
+        // Modify SVG path to clearly prioritize elevator route
+        routePath.setAttribute("d", "M 170 350 L 170 300 L 190 200 L 190 145 L 90 85 L 245 85");
+        routePath.setAttribute("stroke", "#10b981");
+        alertMsg("Λειτουργία ΑμεΑ ενεργή: Διαδρομές χωρίς σκάλες & χρήση ανελκυστήρα.");
+      } else {
+        indicator.className = "w-2 h-2 rounded-full bg-slate-400";
+        headerBtn.className = "flex items-center space-x-1 text-xs bg-slate-800/80 border border-slate-700 px-2.5 py-1.5 rounded-full transition text-slate-200";
+        mapLabel.innerText = "Όλες οι διαδρομές";
+        routePath.setAttribute("d", "M 170 350 L 170 300 L 90 300 L 90 85 L 245 85 L 265 190");
+        routePath.setAttribute("stroke", "#f59e0b");
+        alertMsg("Κανονική λειτουργία πλοήγησης.");
+      }
+    }
+
+    function selectPin(pinNumber) {
+      selectedPinIndex = pinNumber - 1;
+      updateMapCard(selectedPinIndex);
+
+      // Reset pins style
+      for (let i = 1; i <= 4; i++) {
+        const pinG = document.getElementById(`pin-${i}`);
+        if (!pinG) continue;
+        const mainCircle = pinG.querySelectorAll('circle')[pinG.querySelectorAll('circle').length - 1];
+        const text = pinG.querySelector('text');
+
+        if (i === pinNumber) {
+          mainCircle.setAttribute('stroke', '#f59e0b');
+          text.setAttribute('fill', '#f59e0b');
+          pinG.style.transform = "scale(1.25)";
+          pinG.style.transformOrigin = `${mainCircle.getAttribute('cx')}px ${mainCircle.getAttribute('cy')}px`;
+        } else {
+          mainCircle.setAttribute('stroke', '#cbd5e1');
+          text.setAttribute('fill', '#cbd5e1');
+          pinG.style.transform = "scale(1.0)";
+        }
+      }
+    }
+
+    function updateMapCard(index) {
+      const item = EXHIBITS[index];
+      if (!item) return;
+
+      document.getElementById('map-card-img').src = item.image;
+      document.getElementById('map-card-badge').innerText = `Στάση ${index + 1}`;
+      document.getElementById('map-card-hall').innerText = item.hall;
+      document.getElementById('map-card-title').innerText = item.shortTitle;
+      document.getElementById('map-card-time').innerText = `Χρόνος: ~${Math.round(item.audioDuration / 60)} λεπτά`;
+    }
+
+    function focusHall(hallId) {
+      const relatedExhibit = EXHIBITS.find(e => e.hallId === hallId);
+      if (relatedExhibit) {
+        selectPin(relatedExhibit.pinId);
+        alertMsg(`Επιλέχθηκε ${relatedExhibit.hall}`);
+      }
+    }
+
+    function openModalForCurrentPin() {
+      openDetailModal(EXHIBITS[selectedPinIndex].id);
+    }
+
+    function startTourAtStep(stepIdx) {
+      activeTourStep = stepIdx;
+      switchTab('tour');
+    }
+
+    /* ==========================================================
+       ACTIVE TOUR & SYNTHESIZED AUDIO GUIDE
+       ========================================================== */
+    function setupTourStep(stepIndex) {
+      if (stepIndex < 0) stepIndex = 0;
+      if (stepIndex >= EXHIBITS.length) stepIndex = EXHIBITS.length - 1;
+      activeTourStep = stepIndex;
+
+      const item = EXHIBITS[stepIndex];
+      document.getElementById('tour-step-counter').innerText = `ΣΤΑΣΗ ${stepIndex + 1} ΑΠΟ ${EXHIBITS.length} • ΑΠΟΜΕΝΟΥΝ ${40 - stepIndex * 8} ΛΕΠΤΑ`;
+      document.getElementById('tour-turn-instruction').innerText = item.instruction;
+      document.getElementById('tour-progress-bar').style.width = `${((stepIndex + 1) / EXHIBITS.length) * 100}%`;
+
+      document.getElementById('tour-exhibit-img').src = item.image;
+      document.getElementById('tour-exhibit-name').innerText = item.title;
+      document.getElementById('tour-exhibit-period').innerText = item.period;
+      document.getElementById('tour-transcript-content').innerText = item.transcript;
+      
+      const isFav = favoritesList.includes(item.id);
+      document.getElementById('tour-fav-btn').innerText = isFav ? '❤️' : '♡';
+
+      // Reset Audio
+      pauseAudio();
+      audioCurrentSeconds = 0;
+      updateAudioProgressUI(0, item.audioDuration);
+
+      // Disable buttons at boundaries
+      document.getElementById('tour-prev-btn').disabled = (stepIndex === 0);
+      document.getElementById('tour-prev-btn').style.opacity = (stepIndex === 0) ? '0.4' : '1';
+    }
+
+    function nextTourStep() {
+      if (activeTourStep < EXHIBITS.length - 1) {
+        setupTourStep(activeTourStep + 1);
+        alertMsg(`Μετάβαση στη Στάση ${activeTourStep + 1}`);
+      } else {
+        alertMsg("Συγχαρητήρια! Ολοκληρώσατε την περιήγηση.");
+      }
+    }
+
+    function prevTourStep() {
+      if (activeTourStep > 0) {
+        setupTourStep(activeTourStep - 1);
+      }
+    }
+
+    function toggleAudioPlay() {
+      if (isAudioPlaying) {
+        pauseAudio();
+      } else {
+        playAudio();
+      }
+    }
+
+    function playAudio() {
+      isAudioPlaying = true;
+      document.getElementById('audio-play-icon').innerText = '⏸';
+      setWaveformActive(true);
+      
+      // Gentle synthetic tone chime to signal speech simulation
+      playSynthesizedAudioChime();
+
+      const item = EXHIBITS[activeTourStep];
+      clearInterval(audioTimer);
+      audioTimer = setInterval(() => {
+        audioCurrentSeconds += 1 * audioPlaybackRate;
+        if (audioCurrentSeconds >= item.audioDuration) {
+          audioCurrentSeconds = item.audioDuration;
+          pauseAudio();
+        }
+        updateAudioProgressUI(audioCurrentSeconds, item.audioDuration);
+      }, 1000);
+    }
+
+    function pauseAudio() {
+      isAudioPlaying = false;
+      document.getElementById('audio-play-icon').innerText = '▶';
+      setWaveformActive(false);
+      clearInterval(audioTimer);
+    }
+
+    function seekAudio(event) {
+      const bar = event.currentTarget;
+      const rect = bar.getBoundingClientRect();
+      const clickX = event.clientX - rect.left;
+      const fraction = Math.max(0, Math.min(1, clickX / rect.width));
+      const item = EXHIBITS[activeTourStep];
+      audioCurrentSeconds = Math.round(fraction * item.audioDuration);
+      updateAudioProgressUI(audioCurrentSeconds, item.audioDuration);
+    }
+
+    function replayAudio10() {
+      audioCurrentSeconds = Math.max(0, audioCurrentSeconds - 10);
+      updateAudioProgressUI(audioCurrentSeconds, EXHIBITS[activeTourStep].audioDuration);
+    }
+
+    function forwardAudio10() {
+      const item = EXHIBITS[activeTourStep];
+      audioCurrentSeconds = Math.min(item.audioDuration, audioCurrentSeconds + 10);
+      updateAudioProgressUI(audioCurrentSeconds, item.audioDuration);
+    }
+
+    function toggleAudioSpeed() {
+      const speeds = [1.0, 1.25, 1.5];
+      const curIdx = speeds.indexOf(audioPlaybackRate);
+      audioPlaybackRate = speeds[(curIdx + 1) % speeds.length];
+      document.getElementById('audio-speed-btn').innerText = `${audioPlaybackRate.toFixed(1)}x`;
+      alertMsg(`Ταχύτητα ήχου: ${audioPlaybackRate}x`);
+    }
+
+    function updateAudioProgressUI(curSec, totalSec) {
+      const curFormatted = formatTime(Math.floor(curSec));
+      const totFormatted = formatTime(totalSec);
+      document.getElementById('audio-current-time').innerText = curFormatted;
+      document.getElementById('audio-total-time').innerText = totFormatted;
+
+      const pct = (curSec / totalSec) * 100;
+      document.getElementById('audio-track-progress').style.width = `${pct}%`;
+    }
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    function setWaveformActive(active) {
+      const bars = document.querySelectorAll('.wave-bar');
+      bars.forEach(b => {
+        b.style.animationPlayState = active ? 'running' : 'paused';
+      });
+    }
+
+    function toggleTranscriptDrawer() {
+      const drawer = document.getElementById('transcript-drawer');
+      drawer.classList.toggle('hidden');
+    }
+
+    /* Web Audio API Tone Generator for Audio Guide feedback */
+    function playSynthesizedAudioChime() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        if (!audioContext) audioContext = new AudioContext();
+        if (audioContext.state === 'suspended') audioContext.resume();
+
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+        osc.frequency.exponentialRampToValueAtTime(659.25, audioContext.currentTime + 0.18); // E5
+
+        gain.gain.setValueAtTime(0.08, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.35);
+
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+
+        osc.start();
+        osc.stop(audioContext.currentTime + 0.35);
+      } catch (err) {
+        // graceful fallback if browser blocks auto audio
+      }
+    }
+
+    /* ==========================================================
+       MODAL BOTTOM SHEET (EXHIBIT DETAILS)
+       ========================================================== */
+    let currentDetailExhibitId = 1;
+
+    function openDetailModal(exhibitId) {
+      const item = EXHIBITS.find(e => e.id === exhibitId);
+      if (!item) return;
+
+      currentDetailExhibitId = exhibitId;
+      document.getElementById('detail-img').src = item.image;
+      document.getElementById('detail-period-tag').innerText = item.period;
+      document.getElementById('detail-hall').innerText = item.hall;
+      document.getElementById('detail-material').innerText = item.material;
+      document.getElementById('detail-title').innerText = item.title;
+      document.getElementById('detail-bullet-1').innerText = `• ${item.bullet1}`;
+      document.getElementById('detail-bullet-2').innerText = `• ${item.bullet2}`;
+      document.getElementById('detail-desc').innerText = item.desc;
+
+      const sheet = document.getElementById('detail-sheet');
+      const sheetInner = document.getElementById('sheet-inner');
+      sheet.classList.remove('hidden');
+      sheet.classList.add('flex');
+      setTimeout(() => {
+        sheetInner.classList.remove('translate-y-full');
+      }, 10);
+    }
+
+    function closeDetailModal() {
+      const sheet = document.getElementById('detail-sheet');
+      const sheetInner = document.getElementById('sheet-inner');
+      sheetInner.classList.add('translate-y-full');
+      setTimeout(() => {
+        sheet.classList.add('hidden');
+        sheet.classList.remove('flex');
+      }, 250);
+    }
+
+    function locateFromDetail() {
+      const item = EXHIBITS.find(e => e.id === currentDetailExhibitId);
+      closeDetailModal();
+      switchTab('map');
+      if (item) selectPin(item.pinId);
+    }
+
+    function startTourFromDetail() {
+      const item = EXHIBITS.find(e => e.id === currentDetailExhibitId);
+      closeDetailModal();
+      const stepIdx = EXHIBITS.findIndex(e => e.id === currentDetailExhibitId);
+      startTourAtStep(stepIdx !== -1 ? stepIdx : 0);
+    }
+
+    /* ==========================================================
+       FAVORITES & BOOKMARKING SYSTEM
+       ========================================================== */
+    function toggleFavoriteFromTour() {
+      const item = EXHIBITS[activeTourStep];
+      toggleFavoriteId(item.id);
+      const isFav = favoritesList.includes(item.id);
+      document.getElementById('tour-fav-btn').innerText = isFav ? '❤️' : '♡';
+    }
+
+    function toggleFavoriteId(id) {
+      const idx = favoritesList.indexOf(id);
+      if (idx > -1) {
+        favoritesList.splice(idx, 1);
+        alertMsg("Αφαιρέθηκε από τα Αποθηκευμένα.");
+      } else {
+        favoritesList.push(id);
+        alertMsg("Προστέθηκε στα Αποθηκευμένα!");
+      }
+      renderFavorites();
+    }
+
+    function renderFavorites() {
+      const listEl = document.getElementById('favorites-list');
+      const counterEl = document.getElementById('fav-counter');
+      counterEl.innerText = `${favoritesList.length} εκθέματα`;
+
+      if (favoritesList.length === 0) {
+        listEl.innerHTML = `
+          <div class="h-48 flex flex-col items-center justify-center text-center p-4">
+            <span class="text-3xl mb-2">⭐</span>
+            <div class="text-xs font-bold text-slate-700">Δεν υπάρχουν αποθηκευμένα εκθέματα</div>
+            <p class="text-[11px] text-slate-400 mt-1">Πατήστε το εικονίδιο καρδιάς σε οποιοδήποτε έκθεμα για να το αποθηκεύσετε.</p>
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = favoritesList.map(id => {
+        const item = EXHIBITS.find(e => e.id === id);
+        if (!item) return '';
+        return `
+          <div class="bg-white border border-slate-200/90 rounded-2xl p-2.5 flex items-center justify-between shadow-sm">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="openDetailModal(${item.id})">
+              <img src="${item.image}" class="w-12 h-12 rounded-xl object-cover">
+              <div>
+                <h4 class="text-xs font-serif font-bold text-slate-900">${item.shortTitle}</h4>
+                <div class="text-[10px] text-slate-500">${item.hall} • ${item.period}</div>
+              </div>
+            </div>
+            <div class="flex items-center space-x-1">
+              <button onclick="openDetailModal(${item.id})" class="p-1.5 text-slate-400 hover:text-slate-700 text-xs">🔍</button>
+              <button onclick="toggleFavoriteId(${item.id})" class="p-1.5 text-rose-500 text-xs">🗑️</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /* ==========================================================
+       UTILITY: TOAST NOTIFICATIONS (No alert() used)
+       ========================================================== */
+    let toastTimeout = null;
+    function alertMsg(message) {
+      const toast = document.getElementById('app-toast');
+      toast.innerText = message;
+      toast.classList.remove('opacity-0');
+      toast.classList.add('opacity-100');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+      }, 2400);
+    }
+  </script>
+</body>
+</html>
